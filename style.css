@@ -406,3 +406,56 @@ a { color: inherit; text-decoration: none; }
   border: none; outline: none;
 }
 .af-amount-input::placeholder { color: var(--surface2); }
+
+/* ===== CHARTS ===== */
+.chart-card {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 16px; margin-bottom: 12px;
+}
+.chart-title {
+  font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text);
+}
+.donut-legend {
+  margin-top: 14px; display: flex; flex-direction: column; gap: 8px;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 8px;
+}
+.legend-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.legend-label { flex: 1; font-size: 13px; color: var(--text2); }
+.legend-val { font-size: 13px; font-weight: 700; }
+
+.stats-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;
+}
+.stat-card {
+  background: var(--surface); border-radius: var(--radius-sm);
+  padding: 14px 12px; display: flex; flex-direction: column; gap: 4px;
+}
+.stat-icon { font-size: 22px; }
+.stat-label { font-size: 11px; color: var(--text2); font-weight: 500; margin-top: 2px; }
+.stat-val { font-size: 16px; font-weight: 700; }
+.stat-val.pos { color: var(--pos); }
+.stat-val.neg { color: var(--neg); }
+
+.months-summary {
+  margin-top: 14px; display: flex; flex-direction: column; gap: 6px;
+}
+.month-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; background: var(--surface2); border-radius: 8px;
+}
+.month-name { font-size: 13px; font-weight: 700; width: 30px; flex-shrink: 0; }
+.month-ing { font-size: 12px; font-weight: 600; flex: 1; }
+.month-gas { font-size: 12px; font-weight: 600; flex: 1; }
+.month-bal { font-size: 12px; font-weight: 700; flex: 1; text-align: right; }
+.month-ing.pos, .month-gas.pos, .month-bal.pos { color: var(--pos); }
+.month-ing.neg, .month-gas.neg, .month-bal.neg { color: var(--neg); }
+
+/* 4-item bottom nav */
+.bottom-nav {
+  justify-content: space-between; padding-left: 4px; padding-right: 4px;
+}
+.nav-item { padding: 6px 12px; flex: 1; }
