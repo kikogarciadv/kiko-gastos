@@ -520,13 +520,16 @@ function renderAdd() {
 
 // Vuelve al shell después de la pantalla de añadir
 function backToShell(view) {
-  state.view=view;
+  state.view = view;
   renderShell();
-  document.querySelectorAll('.nav-item').forEach(item=>{
-    item.classList.toggle('active', item.dataset.nav===view);
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.nav === view);
   });
-  if (view==='dashboard') renderDashboard();
-  if (view==='history')   renderHistory();
+  // Render inmediato con datos ya en state
+  if (view === 'dashboard') renderDashboard();
+  if (view === 'history')   renderHistory();
+  // Refrescar suscripcion => onSnapshot dispara con datos frescos de Firestore
+  subscribeTransactions();
 }
 
 // ═══════════════════════════════
