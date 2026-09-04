@@ -560,35 +560,52 @@ function renderAdd() {
 
   // ── Save ──
   qs('#btn-save').addEventListener('click', async()=>{
-    const amount  = parseFloat(qs('#inp-amount').value);
+    // iOS uses comma decimal separator - handle both
+    const rawAmt = qs('#inp-amount').value.replace(',', '.');
+    const amount = parseFloat(rawAmt);
     const concept = qs('#inp-concept').value.trim();
-    const dateVal = qs('#inp-date').value;
+    // iOS sometimes returns empty date - default to today
+    const dateRaw = qs('#inp-date').value;
+    const dateVal = dateRaw || new Date().toISOString().split('T')[0];
 
-    if (!amount || amount<=0)  { showToast('Indica un importe válido','error'); return; }
-    if (!state.addCategory)    { showToast('Selecciona una categoría','error'); return; }
-    if (!dateVal)              { showToast('Indica una fecha','error'); return; }
+    const showErr = (msg) => {
+      let e = qs('#form-err');
+      if (!e) {
+        e = document.createElement('p');
+        e.id = 'form-err';
+        e.style.cssText = 'color:#ff453a;font-size:15px;font-weight:600;text-align:center;padding:8px 0 2px;margin:0';
+        qs('#btn-save').insertAdjacentElement('beforebegin', e);
+      }
+      e.textContent = '⚠️ ' + msg;
+    };
+
+    if (!amount || amount <= 0) { showErr('Introduce un importe válido'); return; }
+    if (!state.addCategory)     { showErr('Selecciona una categoría'); return; }
 
     const btn = qs('#btn-save');
-    btn.disabled=true; btn.textContent='Guardando…';
+    btn.disabled = true;
+    btn.textContent = 'Guardando…';
+    const errEl = qs('#form-err');
+    if (errEl) errEl.remove();
 
     try {
       await saveTransaction({
         type:     state.addType,
-        account:  state.addType==='ingreso' ? 'personal' : state.addAccount,
+        account:  state.addType === 'ingreso' ? 'personal' : state.addAccount,
         category: state.addCategory,
-        amount:   Math.round(amount*100)/100,
+        amount:   Math.round(amount * 100) / 100,
         concept,
-        date: new Date(dateVal+'T12:00:00'),
+        date:     new Date(dateVal + 'T12:00:00'),
       });
-      // Reset form state
       state.addAmount=''; state.addConcept=''; state.addDate='';
       state.addCategory=''; state.addType='gasto'; state.addAccount='personal';
-      showToast('✓ Guardado','success');
+      showToast('✓ Guardado', 'success');
       navigate('dashboard');
     } catch(e) {
-      console.error(e);
-      showToast('Error al guardar: '+e.message,'error');
-      btn.disabled=false; btn.textContent='Guardar transacción';
+      console.error('Firestore save error:', e);
+      btn.disabled = false;
+      btn.textContent = 'Guardar transacción';
+      showErr('Error al guardar. Revisa tu conexión.');
     }
   });
 }
