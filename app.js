@@ -281,16 +281,22 @@ function renderShell(){
       </button>
     </nav>`;
 
-  qs('#btn-prev').addEventListener('click',()=>{
-    state.month=prevMonth(state.month);
-    qs('#month-label').textContent=formatMonthLabel(state.month);
+  function changeMonth(newMonth){
+    state.month = newMonth;
+    const lbl = qs('#month-label');
+    if(lbl) lbl.textContent = formatMonthLabel(state.month);
+    // Clear immediately so UI updates right away (dont wait for Firestore)
+    state.transactions = [];
+    if(state.view==='dashboard') renderDashboard();
+    if(state.view==='history')   renderHistory();
+    if(state.view==='charts')    renderCharts();
+    // Then subscribe for real data
     subscribeTransactions();
-  });
+  }
+  qs('#btn-prev').addEventListener('click',()=> changeMonth(prevMonth(state.month)));
   qs('#btn-next').addEventListener('click',()=>{
-    if(state.month>=getMonthKey(new Date())) return;
-    state.month=nextMonth(state.month);
-    qs('#month-label').textContent=formatMonthLabel(state.month);
-    subscribeTransactions();
+    if(state.month >= getMonthKey(new Date())) return;
+    changeMonth(nextMonth(state.month));
   });
   qs('#btn-logout').addEventListener('click',async()=>{
     if(confirm('¿Cerrar sesión?')) await signOut(auth);
