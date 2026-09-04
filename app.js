@@ -11,18 +11,18 @@ import {
 // CONSTANTS
 // ═══════════════════════════════
 const CATS_GASTO = [
-  { id:'fijos',        label:'Gastos Fijos',   icon:'🏠', bg:'rgba(255,107,53,.18)',  bar:'#ff6b35' },
-  { id:'ocio',         label:'Ocio',           icon:'🎉', bg:'rgba(255,230,109,.18)', bar:'#ffe66d' },
-  { id:'viajes',       label:'Viajes',         icon:'✈️',  bg:'rgba(78,205,196,.18)',  bar:'#4ecdc4' },
-  { id:'ropa',         label:'Ropa',           icon:'👕', bg:'rgba(149,225,211,.18)', bar:'#95e1d3' },
-  { id:'comida',       label:'Comida',         icon:'🍔', bg:'rgba(248,181,0,.18)',   bar:'#f8b500' },
-  { id:'inversion',    label:'Inversión',      icon:'📈', bg:'rgba(48,209,88,.18)',   bar:'#30d158' },
-  { id:'transporte',   label:'Transporte',     icon:'🚗', bg:'rgba(77,150,255,.18)',  bar:'#4d96ff' },
-  { id:'alimentacion', label:'Alimentación',   icon:'🛒', bg:'rgba(199,125,255,.18)', bar:'#c77dff' },
-  { id:'salud',        label:'Salud',          icon:'❤️',  bg:'rgba(255,100,100,.18)', bar:'#ff6464' },
-  { id:'gasolina',     label:'Gasolina',       icon:'⛽', bg:'rgba(255,179,71,.18)',  bar:'#ffb347' },
-  { id:'educacion',    label:'Educación',      icon:'📚', bg:'rgba(135,206,235,.18)', bar:'#87ceeb' },
-  { id:'otros',        label:'Otros',          icon:'💰', bg:'rgba(221,160,221,.18)', bar:'#dda0dd' },
+  { id:'fijos',        label:'Gastos Fijos',  icon:'🏠', bg:'rgba(255,107,53,.18)',  bar:'#ff6b35' },
+  { id:'ocio',         label:'Ocio',          icon:'🎉', bg:'rgba(255,230,109,.18)', bar:'#ffe66d' },
+  { id:'viajes',       label:'Viajes',        icon:'✈️',  bg:'rgba(78,205,196,.18)',  bar:'#4ecdc4' },
+  { id:'ropa',         label:'Ropa',          icon:'👕', bg:'rgba(149,225,211,.18)', bar:'#95e1d3' },
+  { id:'comida',       label:'Comida',        icon:'🍔', bg:'rgba(248,181,0,.18)',   bar:'#f8b500' },
+  { id:'inversion',    label:'Inversión',     icon:'📈', bg:'rgba(48,209,88,.18)',   bar:'#30d158' },
+  { id:'transporte',   label:'Transporte',    icon:'🚗', bg:'rgba(77,150,255,.18)',  bar:'#4d96ff' },
+  { id:'alimentacion', label:'Alimentación',  icon:'🛒', bg:'rgba(199,125,255,.18)', bar:'#c77dff' },
+  { id:'salud',        label:'Salud',         icon:'❤️',  bg:'rgba(255,100,100,.18)', bar:'#ff6464' },
+  { id:'gasolina',     label:'Gasolina',      icon:'⛽', bg:'rgba(255,179,71,.18)',  bar:'#ffb347' },
+  { id:'educacion',    label:'Educación',     icon:'📚', bg:'rgba(135,206,235,.18)', bar:'#87ceeb' },
+  { id:'otros',        label:'Otros',         icon:'💰', bg:'rgba(221,160,221,.18)', bar:'#dda0dd' },
 ];
 const CATS_INGRESO = [
   { id:'nomina',   label:'Nómina',   icon:'💼', bg:'rgba(48,209,88,.18)',   bar:'#30d158' },
@@ -37,21 +37,12 @@ const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
 // STATE
 // ═══════════════════════════════
 const state = {
-  user:         null,
-  view:         'dashboard',
-  dashAccount:  'personal',
-  histFilter:   'all',
-  month:        getMonthKey(new Date()),
-  transactions: [],
-  unsub:        null,
-  saldo:        null,      // saldo manual en cuenta
-  // Form state (persists across category changes)
-  addType:      'gasto',
-  addAccount:   'personal',
-  addCategory:  '',
-  addAmount:    '',
-  addConcept:   '',
-  addDate:      '',
+  user: null, view: 'dashboard',
+  dashAccount: 'personal', histFilter: 'all',
+  month: getMonthKey(new Date()),
+  transactions: [], unsub: null, saldo: null,
+  addType: 'gasto', addAccount: 'personal',
+  addCategory: '', addAmount: '', addConcept: '', addDate: '',
 };
 
 // ═══════════════════════════════
@@ -60,112 +51,85 @@ const state = {
 function getMonthKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 }
-function parseMonthKey(k) {
-  const [y,m] = k.split('-');
-  return new Date(+y, +m-1, 1);
-}
+function parseMonthKey(k) { const [y,m]=k.split('-'); return new Date(+y,+m-1,1); }
 function formatMonthLabel(k) {
-  const d = parseMonthKey(k);
-  return `${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`;
+  const d=parseMonthKey(k); return `${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`;
 }
-function prevMonth(k) { const d=parseMonthKey(k); d.setMonth(d.getMonth()-1); return getMonthKey(d); }
-function nextMonth(k) { const d=parseMonthKey(k); d.setMonth(d.getMonth()+1); return getMonthKey(d); }
+function prevMonth(k){const d=parseMonthKey(k);d.setMonth(d.getMonth()-1);return getMonthKey(d);}
+function nextMonth(k){const d=parseMonthKey(k);d.setMonth(d.getMonth()+1);return getMonthKey(d);}
 function formatEur(n) {
   return new Intl.NumberFormat('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n)+' €';
 }
 function formatDateGroup(ts) {
   if (!ts) return '';
-  const d = ts.toDate ? ts.toDate() : new Date(ts);
-  const today = new Date(); today.setHours(0,0,0,0);
-  const day   = new Date(d); day.setHours(0,0,0,0);
+  const d=ts.toDate?ts.toDate():new Date(ts);
+  const today=new Date(); today.setHours(0,0,0,0);
+  const day=new Date(d); day.setHours(0,0,0,0);
   if (day.getTime()===today.getTime()) return 'Hoy';
   if (day.getTime()===today.getTime()-86400000) return 'Ayer';
   return d.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
 }
-function getCat(id, type) {
-  const list = type==='ingreso' ? CATS_INGRESO : CATS_GASTO;
-  return list.find(c=>c.id===id) || {id:'otros',label:'Otros',icon:'💰',bg:'rgba(0,0,0,.2)',bar:'#666'};
+function getCat(id,type) {
+  const list=type==='ingreso'?CATS_INGRESO:CATS_GASTO;
+  return list.find(c=>c.id===id)||{id:'otros',label:'Otros',icon:'💰',bg:'rgba(0,0,0,.2)',bar:'#666'};
 }
-function showToast(msg, type='') {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = `toast show ${type}`;
-  setTimeout(()=>{ el.className='toast'; }, 2500);
+function showToast(msg,type='') {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className=`toast show ${type}`;
+  setTimeout(()=>{el.className='toast';},2500);
 }
-function qs(sel, ctx=document) { return ctx.querySelector(sel); }
-
-// Save current form inputs to state (prevents loss on re-render)
-function saveFormInputs() {
-  const a = qs('#inp-amount');
-  const c = qs('#inp-concept');
-  const d = qs('#inp-date');
-  if (a) state.addAmount  = a.value;
-  if (c) state.addConcept = c.value;
-  if (d) state.addDate    = d.value;
-}
+function qs(sel,ctx=document){return ctx.querySelector(sel);}
 
 // ═══════════════════════════════
-// FIRESTORE - TRANSACTIONS
+// FIRESTORE
 // ═══════════════════════════════
 function subscribeTransactions() {
   if (state.unsub) state.unsub();
   if (!state.user) return;
-  const q = query(
+  const q=query(
     collection(db,'users',state.user.uid,'transactions'),
-    where('month','==',state.month),
-    orderBy('date','desc')
+    where('month','==',state.month), orderBy('date','desc')
   );
-  state.unsub = onSnapshot(q, snap => {
-    state.transactions = snap.docs.map(d=>({id:d.id,...d.data()}));
+  state.unsub=onSnapshot(q, snap=>{
+    state.transactions=snap.docs.map(d=>({id:d.id,...d.data()}));
     if (state.view==='dashboard') renderDashboard();
     if (state.view==='history')   renderHistory();
-  }, err => console.warn('Firestore:', err));
+  }, err=>console.warn('Firestore:',err));
 }
-
 async function saveTransaction(data) {
-  await addDoc(collection(db,'users',state.user.uid,'transactions'), {
-    ...data, month:state.month, createdAt:serverTimestamp()
-  });
+  await addDoc(collection(db,'users',state.user.uid,'transactions'),
+    {...data, month:state.month, createdAt:serverTimestamp()});
 }
-
 async function deleteTx(id) {
   await deleteDoc(doc(db,'users',state.user.uid,'transactions',id));
 }
-
-// ═══════════════════════════════
-// FIRESTORE - SALDO
-// ═══════════════════════════════
 async function loadSaldo() {
   try {
-    const snap = await getDoc(doc(db,'users',state.user.uid,'config','saldo'));
-    if (snap.exists()) state.saldo = snap.data().amount;
-  } catch(e) {}
+    const snap=await getDoc(doc(db,'users',state.user.uid,'config','saldo'));
+    if (snap.exists()) state.saldo=snap.data().amount;
+  } catch(e){}
 }
-
 async function saveSaldo(amount) {
   await setDoc(doc(db,'users',state.user.uid,'config','saldo'),
-    { amount, updatedAt: serverTimestamp() }
-  );
-  state.saldo = amount;
+    {amount, updatedAt:serverTimestamp()});
+  state.saldo=amount;
 }
 
 // ═══════════════════════════════
 // CALCULATIONS
 // ═══════════════════════════════
-function calcSummary(txs, account) {
-  const f = account==='all' ? txs : txs.filter(t=>t.account===account);
-  const ingresos = f.filter(t=>t.type==='ingreso').reduce((s,t)=>s+t.amount,0);
-  const gastos   = f.filter(t=>t.type==='gasto').reduce((s,t)=>s+t.amount,0);
-  return { ingresos, gastos, balance: ingresos-gastos };
+function calcSummary(txs,account) {
+  const f=account==='all'?txs:txs.filter(t=>t.account===account);
+  const ingresos=f.filter(t=>t.type==='ingreso').reduce((s,t)=>s+t.amount,0);
+  const gastos=f.filter(t=>t.type==='gasto').reduce((s,t)=>s+t.amount,0);
+  return {ingresos,gastos,balance:ingresos-gastos};
 }
-
-function calcCategoryTotals(txs, account) {
-  const f = txs.filter(t=>t.type==='gasto'&&(account==='all'||t.account===account));
-  const map = {};
-  f.forEach(t=>{ map[t.category]=(map[t.category]||0)+t.amount; });
-  const max = Math.max(...Object.values(map),1);
-  return Object.entries(map)
-    .sort((a,b)=>b[1]-a[1])
+function calcCategoryTotals(txs,account) {
+  const f=txs.filter(t=>t.type==='gasto'&&(account==='all'||t.account===account));
+  const map={};
+  f.forEach(t=>{map[t.category]=(map[t.category]||0)+t.amount;});
+  const max=Math.max(...Object.values(map),1);
+  return Object.entries(map).sort((a,b)=>b[1]-a[1])
     .map(([id,total])=>({...getCat(id,'gasto'),total,pct:total/max*100}));
 }
 
@@ -173,13 +137,10 @@ function calcCategoryTotals(txs, account) {
 // RENDER: LOGIN
 // ═══════════════════════════════
 function renderLogin() {
-  qs('#app').innerHTML = `
+  qs('#app').innerHTML=`
     <div class="login-screen">
       <div class="login-logo">💸</div>
-      <div class="login-title">
-        <h1>KikoGastos</h1>
-        <p>Tu control financiero personal</p>
-      </div>
+      <div class="login-title"><h1>KikoGastos</h1><p>Tu control financiero personal</p></div>
       <button class="btn-google" id="btn-login">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -190,16 +151,13 @@ function renderLogin() {
         Entrar con Google
       </button>
     </div>`;
-  qs('#btn-login').addEventListener('click', async () => {
-    const btn = qs('#btn-login');
-    btn.disabled = true;
-    btn.textContent = 'Abriendo Google…';
-    try {
-      await signInWithPopup(auth, new GoogleAuthProvider());
-    } catch(e) {
-      btn.disabled = false;
-      btn.innerHTML = '🔄 Reintentar';
-      if (e.code !== 'auth/popup-closed-by-user') showToast('Error: '+e.code, 'error');
+  qs('#btn-login').addEventListener('click', async()=>{
+    const btn=qs('#btn-login');
+    btn.disabled=true; btn.textContent='Conectando…';
+    try { await signInWithPopup(auth,new GoogleAuthProvider()); }
+    catch(e){
+      btn.disabled=false; btn.textContent='Entrar con Google';
+      if (e.code!=='auth/popup-closed-by-user') showToast('Error: '+e.code,'error');
     }
   });
 }
@@ -208,7 +166,7 @@ function renderLogin() {
 // RENDER: SHELL
 // ═══════════════════════════════
 function renderShell() {
-  qs('#app').innerHTML = `
+  qs('#app').innerHTML=`
     <div class="app-header">
       <div class="header-top">
         <span class="header-title">💸 KikoGastos</span>
@@ -222,31 +180,31 @@ function renderShell() {
     </div>
     <div class="app-content" id="content"></div>
     <nav class="bottom-nav">
-      <button class="nav-item active" data-nav="dashboard">
+      <button class="nav-item ${state.view==='dashboard'?'active':''}" data-nav="dashboard">
         <span class="nav-icon">📊</span><span class="nav-label">Resumen</span>
       </button>
       <button class="nav-fab" data-nav="add" aria-label="Añadir">+</button>
-      <button class="nav-item" data-nav="history">
+      <button class="nav-item ${state.view==='history'?'active':''}" data-nav="history">
         <span class="nav-icon">📋</span><span class="nav-label">Historial</span>
       </button>
     </nav>`;
 
-  qs('#btn-prev').addEventListener('click', () => {
-    state.month = prevMonth(state.month);
-    qs('#month-label').textContent = formatMonthLabel(state.month);
+  qs('#btn-prev').addEventListener('click',()=>{
+    state.month=prevMonth(state.month);
+    qs('#month-label').textContent=formatMonthLabel(state.month);
     subscribeTransactions();
   });
-  qs('#btn-next').addEventListener('click', () => {
-    if (state.month >= getMonthKey(new Date())) return;
-    state.month = nextMonth(state.month);
-    qs('#month-label').textContent = formatMonthLabel(state.month);
+  qs('#btn-next').addEventListener('click',()=>{
+    if (state.month>=getMonthKey(new Date())) return;
+    state.month=nextMonth(state.month);
+    qs('#month-label').textContent=formatMonthLabel(state.month);
     subscribeTransactions();
   });
-  qs('#btn-logout').addEventListener('click', async () => {
-    if (confirm('¿Cerrar sesión?')) { await signOut(auth); }
+  qs('#btn-logout').addEventListener('click',async()=>{
+    if(confirm('¿Cerrar sesión?')) await signOut(auth);
   });
-  document.querySelectorAll('[data-nav]').forEach(btn => {
-    btn.addEventListener('click', () => navigate(btn.dataset.nav));
+  document.querySelectorAll('[data-nav]').forEach(btn=>{
+    btn.addEventListener('click',()=>navigate(btn.dataset.nav));
   });
 }
 
@@ -254,78 +212,66 @@ function renderShell() {
 // RENDER: DASHBOARD
 // ═══════════════════════════════
 function renderDashboard() {
-  const content = qs('#content');
-  if (!content) return;
-  const acc  = state.dashAccount;
-  const txs  = state.transactions;
-  const sumP = calcSummary(txs,'personal');
-  const cats = calcCategoryTotals(txs, acc);
-  const recent = txs.filter(t=>acc==='all'||t.account===acc).slice(0,6);
+  const content=qs('#content'); if(!content) return;
+  const acc=state.dashAccount, txs=state.transactions;
+  const sumP=calcSummary(txs,'personal');
+  const cats=calcCategoryTotals(txs,acc);
+  const recent=txs.filter(t=>acc==='all'||t.account===acc).slice(0,6);
 
-  // Saldo card
-  const saldoHtml = `
-    <div class="saldo-card" id="saldo-card">
+  const saldoHtml=`
+    <div class="saldo-card">
       <div class="saldo-left">
         <div class="saldo-label">💰 Saldo en cuenta</div>
-        <div class="saldo-value">${state.saldo!==null ? formatEur(state.saldo) : '—'}</div>
+        <div class="saldo-value">${state.saldo!==null?formatEur(state.saldo):'Toca para introducir'}</div>
       </div>
-      <button class="saldo-edit-btn" id="btn-edit-saldo">✏️ Actualizar</button>
+      <button class="saldo-edit-btn" id="btn-edit-saldo">✏️ Editar</button>
     </div>`;
 
-  // Balance card
-  let balanceHtml = '';
+  let balanceHtml='';
   if (acc==='personal') {
-    const sign = sumP.balance>=0?'pos':'neg';
-    balanceHtml = `
+    const s=sumP.balance>=0?'pos':'neg';
+    balanceHtml=`
       <div class="balance-card">
-        <div class="balance-label">Balance calculado del mes</div>
-        <div class="balance-amount ${sign}">${sumP.balance<0?'-':''}${formatEur(Math.abs(sumP.balance))}</div>
+        <div class="balance-label">Balance del mes</div>
+        <div class="balance-amount ${s}">${sumP.balance<0?'-':''}${formatEur(Math.abs(sumP.balance))}</div>
         <div class="balance-row">
-          <div class="balance-stat">
-            <div class="balance-stat-label">Ingresos</div>
-            <div class="balance-stat-value pos">+${formatEur(sumP.ingresos)}</div>
-          </div>
-          <div class="balance-stat">
-            <div class="balance-stat-label">Gastos</div>
-            <div class="balance-stat-value neg">-${formatEur(sumP.gastos)}</div>
-          </div>
+          <div class="balance-stat"><div class="balance-stat-label">Ingresos</div><div class="balance-stat-value pos">+${formatEur(sumP.ingresos)}</div></div>
+          <div class="balance-stat"><div class="balance-stat-label">Gastos</div><div class="balance-stat-value neg">-${formatEur(sumP.gastos)}</div></div>
         </div>
       </div>`;
   } else {
-    const sumM = calcSummary(txs,'madre');
-    balanceHtml = `
+    const sumM=calcSummary(txs,'madre');
+    balanceHtml=`
       <div class="balance-card">
         <div class="balance-label">Tarjeta Mamá · Gastado este mes</div>
         <div class="balance-amount neutral">${formatEur(sumM.gastos)}</div>
-        <div class="madre-note">💜 Estos gastos no van contra tu cuenta personal.</div>
+        <div class="madre-note">💜 No va contra tu cuenta personal.</div>
       </div>`;
   }
 
-  const catsHtml = cats.length
-    ? cats.map(c=>`
-        <div class="category-item">
-          <div class="category-icon" style="background:${c.bg}">${c.icon}</div>
-          <div class="category-info">
-            <div class="category-name">${c.label}</div>
-            <div class="category-bar-wrap"><div class="category-bar" style="width:${c.pct}%;background:${c.bar}"></div></div>
-          </div>
-          <div class="category-amount">${formatEur(c.total)}</div>
-        </div>`).join('')
-    : '<div style="padding:16px;color:var(--text2);text-align:center;font-size:14px">Sin gastos este mes</div>';
+  const catsHtml=cats.length?cats.map(c=>`
+    <div class="category-item">
+      <div class="category-icon" style="background:${c.bg}">${c.icon}</div>
+      <div class="category-info">
+        <div class="category-name">${c.label}</div>
+        <div class="category-bar-wrap"><div class="category-bar" style="width:${c.pct}%;background:${c.bar}"></div></div>
+      </div>
+      <div class="category-amount">${formatEur(c.total)}</div>
+    </div>`).join('')
+    :'<div style="padding:16px;color:var(--text2);text-align:center;font-size:14px">Sin gastos este mes</div>';
 
-  const recentHtml = recent.length
-    ? recent.map(t=>txItemHtml(t)).join('')
-    : '<div style="padding:16px;color:var(--text2);text-align:center;font-size:14px">Sin transacciones aún</div>';
+  const recentHtml=recent.length?recent.map(t=>txItemHtml(t)).join('')
+    :'<div style="padding:16px;color:var(--text2);text-align:center;font-size:14px">Sin transacciones aún</div>';
 
-  content.innerHTML = `
+  content.innerHTML=`
     <div class="account-tabs">
       <button class="account-tab ${acc==='personal'?'active-personal':''}" data-acc="personal">Mi Cuenta</button>
       <button class="account-tab ${acc==='madre'?'active-madre':''}" data-acc="madre">Tarjeta Mamá</button>
     </div>
-    ${acc==='personal' ? saldoHtml : ''}
+    ${acc==='personal'?saldoHtml:''}
     ${balanceHtml}
     <div class="section">
-      <div class="section-header"><span class="section-title">Gastos por categoría</span></div>
+      <div class="section-header"><span class="section-title">Por categoría</span></div>
       <div class="category-list">${catsHtml}</div>
     </div>
     <div class="section">
@@ -337,35 +283,24 @@ function renderDashboard() {
     </div>`;
 
   content.querySelectorAll('[data-acc]').forEach(b=>
-    b.addEventListener('click', ()=>{ state.dashAccount=b.dataset.acc; renderDashboard(); })
-  );
+    b.addEventListener('click',()=>{state.dashAccount=b.dataset.acc;renderDashboard();}));
   content.querySelectorAll('[data-nav]').forEach(b=>
-    b.addEventListener('click', ()=>navigate(b.dataset.nav))
-  );
+    b.addEventListener('click',()=>navigate(b.dataset.nav)));
   content.querySelectorAll('[data-del]').forEach(b=>
-    b.addEventListener('click', async()=>{
-      if (confirm('¿Eliminar esta transacción?')) {
-        await deleteTx(b.dataset.del); showToast('Eliminado','success');
-      }
-    })
-  );
-
-  // Saldo edit button
-  const editBtn = qs('#btn-edit-saldo');
-  if (editBtn) {
-    editBtn.addEventListener('click', ()=> showSaldoModal());
-  }
+    b.addEventListener('click',async()=>{
+      if(confirm('¿Eliminar?')){await deleteTx(b.dataset.del);showToast('Eliminado','success');}
+    }));
+  const editBtn=qs('#btn-edit-saldo');
+  if(editBtn) editBtn.addEventListener('click',showSaldoModal);
 }
 
-// Saldo modal (simple prompt-style UI)
 function showSaldoModal() {
-  // Create overlay
-  const overlay = document.createElement('div');
-  overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px`;
-  overlay.innerHTML = `
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px';
+  overlay.innerHTML=`
     <div style="background:var(--surface);border-radius:20px;padding:28px 24px;width:100%;max-width:340px">
       <h3 style="font-size:20px;font-weight:700;margin-bottom:8px">💰 Saldo en cuenta</h3>
-      <p style="color:var(--text2);font-size:14px;margin-bottom:20px;line-height:1.4">Introduce el saldo real que tienes ahora mismo en tu cuenta bancaria.</p>
+      <p style="color:var(--text2);font-size:14px;margin-bottom:20px;line-height:1.4">Introduce el saldo real que tienes ahora mismo en el banco.</p>
       <div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border-radius:12px;padding:14px 16px;margin-bottom:20px">
         <span style="font-size:22px;color:var(--text2)">€</span>
         <input id="saldo-input" type="number" inputmode="decimal" step="0.01" placeholder="0,00"
@@ -378,21 +313,15 @@ function showSaldoModal() {
       </div>
     </div>`;
   document.body.appendChild(overlay);
-
-  const input = qs('#saldo-input', overlay);
-  input.focus();
-  input.select();
-
-  qs('#saldo-cancel', overlay).addEventListener('click', ()=> overlay.remove());
-  overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
-  qs('#saldo-save', overlay).addEventListener('click', async()=>{
-    const val = parseFloat(input.value);
-    if (isNaN(val)) { showToast('Introduce un importe válido','error'); return; }
-    qs('#saldo-save', overlay).textContent = 'Guardando…';
+  const inp=qs('#saldo-input',overlay); inp.focus(); inp.select();
+  qs('#saldo-cancel',overlay).addEventListener('click',()=>overlay.remove());
+  overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
+  qs('#saldo-save',overlay).addEventListener('click',async()=>{
+    const val=parseFloat(String(qs('#saldo-input',overlay).value).replace(',','.'));
+    if(isNaN(val)){showToast('Importe inválido','error');return;}
+    qs('#saldo-save',overlay).textContent='Guardando…';
     await saveSaldo(val);
-    overlay.remove();
-    showToast('Saldo actualizado ✓','success');
-    renderDashboard();
+    overlay.remove(); showToast('Saldo actualizado ✓','success'); renderDashboard();
   });
 }
 
@@ -400,49 +329,32 @@ function showSaldoModal() {
 // RENDER: HISTORY
 // ═══════════════════════════════
 function renderHistory() {
-  const content = qs('#content');
-  if (!content) return;
-  const f   = state.histFilter;
-  const txs = state.transactions.filter(t=>f==='all'||t.account===f);
-  const groups = {};
-  txs.forEach(t=>{
-    const key = formatDateGroup(t.date);
-    if (!groups[key]) groups[key]=[];
-    groups[key].push(t);
-  });
-  const groupsHtml = Object.entries(groups).map(([date,items])=>`
-    <div class="tx-group">
-      <div class="tx-date">${date}</div>
-      ${items.map(t=>txItemHtml(t)).join('')}
-    </div>`).join('');
-
-  content.innerHTML = `
+  const content=qs('#content'); if(!content) return;
+  const f=state.histFilter;
+  const txs=state.transactions.filter(t=>f==='all'||t.account===f);
+  const groups={};
+  txs.forEach(t=>{const k=formatDateGroup(t.date);if(!groups[k])groups[k]=[];groups[k].push(t);});
+  const groupsHtml=Object.entries(groups).map(([date,items])=>`
+    <div class="tx-group"><div class="tx-date">${date}</div>${items.map(t=>txItemHtml(t)).join('')}</div>`).join('');
+  content.innerHTML=`
     <div class="history-filters">
       <button class="filter-pill ${f==='all'?'active':''}" data-f="all">Todas</button>
       <button class="filter-pill ${f==='personal'?'active':''}" data-f="personal">Mi Cuenta</button>
       <button class="filter-pill ${f==='madre'?'active':''}" data-f="madre">Tarjeta Mamá</button>
     </div>
-    ${txs.length ? groupsHtml : `<div class="empty"><div class="empty-icon">🔍</div><h3>Sin registros</h3><p>No hay transacciones con este filtro en ${formatMonthLabel(state.month)}.</p></div>`}`;
-
+    ${txs.length?groupsHtml:`<div class="empty"><div class="empty-icon">🔍</div><h3>Sin registros</h3><p>No hay transacciones en ${formatMonthLabel(state.month)}.</p></div>`}`;
   content.querySelectorAll('[data-f]').forEach(b=>
-    b.addEventListener('click',()=>{ state.histFilter=b.dataset.f; renderHistory(); })
-  );
+    b.addEventListener('click',()=>{state.histFilter=b.dataset.f;renderHistory();}));
   content.querySelectorAll('[data-del]').forEach(b=>
     b.addEventListener('click',async()=>{
-      if (confirm('¿Eliminar esta transacción?')) {
-        await deleteTx(b.dataset.del); showToast('Eliminado','success');
-      }
-    })
-  );
+      if(confirm('¿Eliminar?')){await deleteTx(b.dataset.del);showToast('Eliminado','success');}
+    }));
 }
 
 function txItemHtml(t) {
-  const cat  = getCat(t.category, t.type);
-  const sign = t.type==='ingreso'?'+':'-';
-  const cls  = t.type==='ingreso'?'pos':'neg';
-  const badge = t.account==='madre'
-    ? '<span class="tx-badge badge-madre">Mamá</span>'
-    : '<span class="tx-badge badge-personal">Personal</span>';
+  const cat=getCat(t.category,t.type);
+  const sign=t.type==='ingreso'?'+':'-', cls=t.type==='ingreso'?'pos':'neg';
+  const badge=t.account==='madre'?'<span class="tx-badge badge-madre">Mamá</span>':'<span class="tx-badge badge-personal">Personal</span>';
   return `
     <div class="tx-item">
       <div class="tx-icon" style="background:${cat.bg}">${cat.icon}</div>
@@ -458,169 +370,176 @@ function txItemHtml(t) {
 }
 
 // ═══════════════════════════════
-// RENDER: ADD FORM
+// RENDER: ADD — pantalla completa
+// con botón FIJO en la parte inferior
 // ═══════════════════════════════
 function renderAdd() {
-  const content = qs('#content');
-  if (!content) return;
-  const type = state.addType;
-  const acc  = state.addAccount;
-  const cats = type==='gasto' ? CATS_GASTO : CATS_INGRESO;
-  const today = new Date().toISOString().split('T')[0];
-  const dateVal = state.addDate || today;
+  const type=state.addType, acc=state.addAccount;
+  const cats=type==='gasto'?CATS_GASTO:CATS_INGRESO;
+  const today=new Date().toISOString().split('T')[0];
 
-  const accHtml = type==='gasto' ? `
-    <div class="form-field">
-      <div class="form-label">¿Con qué cuenta?</div>
+  const accHtml=type==='gasto'?`
+    <div class="af-field">
+      <div class="af-label">¿Con qué cuenta?</div>
       <div class="account-select">
         <button class="acct-btn ${acc==='personal'?'active-personal':''}" data-acct="personal">💳 Mi Cuenta</button>
         <button class="acct-btn ${acc==='madre'?'active-madre':''}" data-acct="madre">💜 Tarjeta Mamá</button>
       </div>
-    </div>` : '';
+    </div>`:'';
 
-  const catsHtml = cats.map(c=>`
-    <div class="cat-option ${state.addCategory===c.id?'selected':''}" data-cat="${c.id}">
+  const catsHtml=cats.map(c=>`
+    <button class="cat-option ${state.addCategory===c.id?'selected':''}" data-cat="${c.id}">
       <span class="icon">${c.icon}</span>
       <span class="label">${c.label}</span>
-    </div>`).join('');
+    </button>`).join('');
 
-  content.innerHTML = `
-    <div class="add-screen">
-      <div class="add-header">
-        <h2>Nueva transacción</h2>
-        <button class="add-cancel" data-nav="dashboard">Cancelar</button>
+  // Render as FULL SCREEN — replaces #app entirely
+  qs('#app').innerHTML=`
+    <div class="af-page">
+      <div class="af-topbar">
+        <button class="af-cancel" id="af-cancel">✕ Cancelar</button>
+        <span class="af-title">Nueva transacción</span>
       </div>
-      <div class="add-body">
-        <div class="type-toggle">
+
+      <div class="af-body" id="af-body">
+        <div class="type-toggle" style="margin-bottom:16px">
           <button class="type-btn ${type==='gasto'?'active-gasto':''}" data-type="gasto">− Gasto</button>
           <button class="type-btn ${type==='ingreso'?'active-ingreso':''}" data-type="ingreso">+ Ingreso</button>
         </div>
+
         ${accHtml}
-        <div class="amount-wrap">
-          <span class="amount-currency">€</span>
-          <input class="amount-input" id="inp-amount" type="number" inputmode="decimal"
-            placeholder="0,00" min="0" step="0.01" value="${state.addAmount}">
+
+        <div class="af-amount-wrap">
+          <span class="af-eur">€</span>
+          <input id="af-amount" class="af-amount-input" type="number" inputmode="decimal"
+            placeholder="0,00" min="0" step="0.01" value="${state.addAmount}" autocomplete="off">
         </div>
-        <div class="form-field">
-          <div class="form-label">Concepto (opcional)</div>
-          <input class="form-input" id="inp-concept" type="text"
-            placeholder="Ej: Cena con amigos" value="${state.addConcept}">
+
+        <div class="af-field">
+          <div class="af-label">Concepto (opcional)</div>
+          <input id="af-concept" class="form-input" type="text"
+            placeholder="Ej: Cena con amigos" value="${state.addConcept}" autocomplete="off">
         </div>
-        <div class="form-field">
-          <div class="form-label">Categoría</div>
+
+        <div class="af-field">
+          <div class="af-label">Categoría</div>
           <div class="cat-grid">${catsHtml}</div>
         </div>
-        <div class="form-field">
-          <div class="form-label">Fecha</div>
-          <input class="form-input" id="inp-date" type="date" value="${dateVal}">
+
+        <div class="af-field">
+          <div class="af-label">Fecha</div>
+          <input id="af-date" class="form-input" type="date" value="${state.addDate||today}">
         </div>
-        <button class="btn-submit" id="btn-save">Guardar transacción</button>
+      </div>
+
+      <div class="af-footer">
+        <p id="af-err" style="display:none;color:#ff453a;font-size:14px;font-weight:600;text-align:center;margin:0 0 10px"></p>
+        <button id="af-save" class="btn-submit">Guardar transacción</button>
       </div>
     </div>`;
 
-  // ── Type toggle (save inputs first, then re-render) ──
-  content.querySelectorAll('[data-type]').forEach(b=>
-    b.addEventListener('click',()=>{
-      saveFormInputs();
-      state.addType    = b.dataset.type;
-      state.addAccount = 'personal';
-      state.addCategory = '';
-      renderAdd();
-    })
-  );
-
-  // ── Account toggle (save inputs first, then re-render) ──
-  content.querySelectorAll('[data-acct]').forEach(b=>
-    b.addEventListener('click',()=>{
-      saveFormInputs();
-      state.addAccount = b.dataset.acct;
-      renderAdd();
-    })
-  );
-
-  // ── Category: ONLY toggle CSS class, NO re-render ──
-  content.querySelectorAll('[data-cat]').forEach(b=>
-    b.addEventListener('click',()=>{
-      state.addCategory = b.dataset.cat;
-      content.querySelectorAll('[data-cat]').forEach(btn=>{
-        btn.classList.toggle('selected', btn.dataset.cat===state.addCategory);
-      });
-    })
-  );
-
   // ── Cancel ──
-  content.querySelectorAll('[data-nav]').forEach(b=>
+  qs('#af-cancel').addEventListener('click',()=>{
+    state.addAmount=''; state.addConcept=''; state.addDate='';
+    state.addCategory=''; state.addType='gasto'; state.addAccount='personal';
+    backToShell('dashboard');
+  });
+
+  // ── Type toggle ──
+  qs('#app').querySelectorAll('[data-type]').forEach(b=>
     b.addEventListener('click',()=>{
-      // Reset form state
-      state.addAmount=''; state.addConcept=''; state.addDate='';
-      state.addCategory=''; state.addType='gasto'; state.addAccount='personal';
-      navigate(b.dataset.nav);
+      state.addAmount=qs('#af-amount').value;
+      state.addConcept=qs('#af-concept').value;
+      state.addDate=qs('#af-date').value;
+      state.addType=b.dataset.type;
+      state.addAccount='personal'; state.addCategory='';
+      renderAdd();
+    })
+  );
+
+  // ── Account ──
+  qs('#app').querySelectorAll('[data-acct]').forEach(b=>
+    b.addEventListener('click',()=>{
+      state.addAmount=qs('#af-amount').value;
+      state.addConcept=qs('#af-concept').value;
+      state.addDate=qs('#af-date').value;
+      state.addAccount=b.dataset.acct;
+      renderAdd();
+    })
+  );
+
+  // ── Category (NO re-render — just toggle CSS) ──
+  qs('#app').querySelectorAll('[data-cat]').forEach(b=>
+    b.addEventListener('click',()=>{
+      state.addCategory=b.dataset.cat;
+      qs('#app').querySelectorAll('[data-cat]').forEach(btn=>
+        btn.classList.toggle('selected', btn.dataset.cat===state.addCategory)
+      );
     })
   );
 
   // ── Save ──
-  qs('#btn-save').addEventListener('click', async()=>{
-    // iOS uses comma decimal separator - handle both
-    const rawAmt = qs('#inp-amount').value.replace(',', '.');
-    const amount = parseFloat(rawAmt);
-    const concept = qs('#inp-concept').value.trim();
-    // iOS sometimes returns empty date - default to today
-    const dateRaw = qs('#inp-date').value;
-    const dateVal = dateRaw || new Date().toISOString().split('T')[0];
+  qs('#af-save').addEventListener('click', async()=>{
+    const rawAmt=String(qs('#af-amount').value).replace(',','.');
+    const amount=parseFloat(rawAmt);
+    const concept=qs('#af-concept').value.trim();
+    const dateRaw=qs('#af-date').value;
+    const dateVal=dateRaw||new Date().toISOString().split('T')[0];
 
-    const showErr = (msg) => {
-      let e = qs('#form-err');
-      if (!e) {
-        e = document.createElement('p');
-        e.id = 'form-err';
-        e.style.cssText = 'color:#ff453a;font-size:15px;font-weight:600;text-align:center;padding:8px 0 2px;margin:0';
-        qs('#btn-save').insertAdjacentElement('beforebegin', e);
-      }
-      e.textContent = '⚠️ ' + msg;
+    const showErr=msg=>{
+      const e=qs('#af-err'); e.textContent='⚠️ '+msg; e.style.display='block';
     };
 
-    if (!amount || amount <= 0) { showErr('Introduce un importe válido'); return; }
-    if (!state.addCategory)     { showErr('Selecciona una categoría'); return; }
+    if (!amount||amount<=0) { showErr('Introduce un importe válido'); return; }
+    if (!state.addCategory) { showErr('Selecciona una categoría'); return; }
 
-    const btn = qs('#btn-save');
-    btn.disabled = true;
-    btn.textContent = 'Guardando…';
-    const errEl = qs('#form-err');
-    if (errEl) errEl.remove();
+    const btn=qs('#af-save');
+    btn.disabled=true; btn.textContent='Guardando…';
 
     try {
       await saveTransaction({
-        type:     state.addType,
-        account:  state.addType === 'ingreso' ? 'personal' : state.addAccount,
+        type: state.addType,
+        account: state.addType==='ingreso'?'personal':state.addAccount,
         category: state.addCategory,
-        amount:   Math.round(amount * 100) / 100,
+        amount: Math.round(amount*100)/100,
         concept,
-        date:     new Date(dateVal + 'T12:00:00'),
+        date: new Date(dateVal+'T12:00:00'),
       });
       state.addAmount=''; state.addConcept=''; state.addDate='';
       state.addCategory=''; state.addType='gasto'; state.addAccount='personal';
-      showToast('✓ Guardado', 'success');
-      navigate('dashboard');
+      showToast('✓ Guardado correctamente','success');
+      backToShell('dashboard');
     } catch(e) {
-      console.error('Firestore save error:', e);
-      btn.disabled = false;
-      btn.textContent = 'Guardar transacción';
-      showErr('Error al guardar. Revisa tu conexión.');
+      console.error('Save error:',e);
+      btn.disabled=false; btn.textContent='Guardar transacción';
+      qs('#af-err').textContent='⚠️ Error al guardar. Revisa tu conexión.';
+      qs('#af-err').style.display='block';
     }
   });
+}
+
+// Vuelve al shell después de la pantalla de añadir
+function backToShell(view) {
+  state.view=view;
+  renderShell();
+  document.querySelectorAll('.nav-item').forEach(item=>{
+    item.classList.toggle('active', item.dataset.nav===view);
+  });
+  if (view==='dashboard') renderDashboard();
+  if (view==='history')   renderHistory();
 }
 
 // ═══════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════
 function navigate(view) {
-  state.view = view;
+  if (view==='add') { state.view='add'; renderAdd(); return; }
+  state.view=view;
   document.querySelectorAll('.nav-item').forEach(item=>{
     item.classList.toggle('active', item.dataset.nav===view);
   });
   if (view==='dashboard') renderDashboard();
   if (view==='history')   renderHistory();
-  if (view==='add')       renderAdd();
 }
 
 // ═══════════════════════════════
@@ -628,11 +547,10 @@ function navigate(view) {
 // ═══════════════════════════════
 function init() {
   onAuthStateChanged(auth, async user=>{
-    state.user = user;
+    state.user=user;
     if (!user) {
-      if (state.unsub) { state.unsub(); state.unsub=null; }
-      renderLogin();
-      return;
+      if(state.unsub){state.unsub();state.unsub=null;}
+      renderLogin(); return;
     }
     renderShell();
     await loadSaldo();
@@ -640,5 +558,4 @@ function init() {
     renderDashboard();
   });
 }
-
 init();
