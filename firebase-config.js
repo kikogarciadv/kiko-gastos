@@ -2,15 +2,13 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getFirestore, enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getAuth } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
-// ⚠️ RELLENA AQUÍ CON TU CONFIGURACIÓN DE FIREBASE
-// Ve a console.firebase.google.com → Tu proyecto → Configuración → Tus apps → Config
 const firebaseConfig = {
-  apiKey:            "AQUI_TU_API_KEY",
-  authDomain:        "AQUI_TU_PROJECT.firebaseapp.com",
-  projectId:         "AQUI_TU_PROJECT_ID",
-  storageBucket:     "AQUI_TU_PROJECT.appspot.com",
-  messagingSenderId: "AQUI_TU_SENDER_ID",
-  appId:             "AQUI_TU_APP_ID"
+  apiKey:            "AIzaSyDPz0Z9BCYfxvGRZta9HyYNJ9swvQ6eDcE",
+  authDomain:        "kiko-gastos.firebaseapp.com",
+  projectId:         "kiko-gastos",
+  storageBucket:     "kiko-gastos.firebasestorage.app",
+  messagingSenderId: "747835066810",
+  appId:             "1:747835066810:web:2d0c4c55f2b389d14d3583"
 };
 
 const app = initializeApp(firebaseConfig);
