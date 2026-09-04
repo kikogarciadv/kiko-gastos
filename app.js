@@ -4,7 +4,7 @@ import {
   query, where, orderBy, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import {
-  GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged
+  GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
 // ═══════════════════════════════
@@ -186,8 +186,13 @@ function renderLogin() {
     </div>`;
   qs('#btn-login').addEventListener('click', async () => {
     try {
-      await signInWithRedirect(auth, new GoogleAuthProvider());
-    } catch(e) { showToast('Error al iniciar sesión', 'error'); }
+      await signInWithPopup(auth, new GoogleAuthProvider());
+    } catch(e) {
+      console.error(e);
+      if (e.code !== 'auth/popup-closed-by-user') {
+        showToast('Error al iniciar sesión: ' + e.code, 'error');
+      }
+    }
   });
 }
 
@@ -535,11 +540,6 @@ function navigate(view) {
 // INIT / AUTH
 // ═══════════════════════════════
 async function init() {
-  // Handle redirect result (iOS PWA login)
-  try {
-    await getRedirectResult(auth);
-  } catch(e) { /* ignore */ }
-
   onAuthStateChanged(auth, user => {
     state.user = user;
     if (!user) {
