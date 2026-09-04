@@ -1,6 +1,6 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { getAuth } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getAuth, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
 const firebaseConfig = {
   apiKey:            "AIzaSyDPz0Z9BCYfxvGRZta9HyYNJ9swvQ6eDcE",
@@ -15,5 +15,8 @@ const app = initializeApp(firebaseConfig);
 export const db   = getFirestore(app);
 export const auth = getAuth(app);
 
-// Persistencia offline (datos disponibles sin internet)
+// Mantener sesión iniciada aunque se cierre la app
+setPersistence(auth, browserLocalPersistence).catch(() => {});
+
+// Datos disponibles sin internet
 enableIndexedDbPersistence(db).catch(() => {});
