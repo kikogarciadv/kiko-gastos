@@ -15,7 +15,8 @@ const CATS_GASTO = [
   { id:'ocio',         label:'Ocio',          icon:'🎉', bar:'#ffe66d', bg:'rgba(255,230,109,.15)' },
   { id:'viajes',       label:'Viajes',        icon:'✈️',  bar:'#4ecdc4', bg:'rgba(78,205,196,.15)' },
   { id:'ropa',         label:'Ropa',          icon:'👕', bar:'#95e1d3', bg:'rgba(149,225,211,.15)' },
-  { id:'comida',       label:'Comida',        icon:'🍔', bar:'#f8b500', bg:'rgba(248,181,0,.15)' },
+  { id:'supermercado', label:'Supermercado',  icon:'🛒', bar:'#f8b500', bg:'rgba(248,181,0,.15)' },
+  { id:'restaurantes',  label:'Restaurantes',  icon:'🍽️',  bar:'#ff8c42', bg:'rgba(255,140,66,.15)' },
   { id:'inversion',    label:'Inversión',     icon:'📈', bar:'#34c759', bg:'rgba(52,199,89,.15)' },
   { id:'transporte',   label:'Transporte',    icon:'🚗', bar:'#007aff', bg:'rgba(0,122,255,.15)' },
   { id:'alimentacion', label:'Alimentación',  icon:'🛒', bar:'#c77dff', bg:'rgba(199,125,255,.15)' },
@@ -40,7 +41,8 @@ const state = {
   user:null, view:'dashboard', dashAccount:'personal', histFilter:'all',
   month: getMonthKey(new Date()),
   transactions:[], unsub:null,
-  saldo:null,           // raw saldo entered by user (for current month)
+  saldo:null,
+  saldoData:null,       // {amount, enteredAt} for auto-adjustment
   addType:'gasto', addAccount:'personal',
   addCategory:'', addAmount:'', addConcept:'', addDate:'',
 };
@@ -106,31 +108,50 @@ async function deleteTx(id){
 async function loadSaldo(){
   try{
     const snap=await getDoc(doc(db,'users',state.user.uid,'config','saldo'));
-    if(snap.exists()) state.saldo=snap.data().amount;
+    if(snap.exists()){ state.saldo=snap.data().amount; state.saldoData=snap.data(); }
   }catch(e){}
 }
 async function saveSaldo(amount){
-  await setDoc(doc(db,'users',state.user.uid,'config','saldo'),
-    {amount, updatedAt:serverTimestamp()});
+  const data={amount, updatedAt:serverTimestamp(), enteredAt:serverTimestamp()};
+  await setDoc(doc(db,'users',state.user.uid,'config','saldo'), data);
   state.saldo=amount;
+  state.saldoData={amount, enteredAt:{toDate:()=>new Date()}}; // local optimistic
 }
 
 // ─────────────────────────────────────
-// SALDO ESTIMADO POR MES
-// Si el usuario tiene €870 ahora (sep) y gastó €27 en sep,
-// en agosto tenía €870 + €27 = €897
-// Fórmula: saldo_mes_M = saldo_actual + Σ(gastos-ingresos) de meses M+1..ahora
+// SALDO CALCULADO
+// Para el mes actual: saldo_base + ajuste por transacciones creadas DESPUÉS de introducir el saldo
+// Para meses pasados: saldo_actual + gastos_meses_posteriores - ingresos_meses_posteriores
 // ─────────────────────────────────────
+function calcSaldoCurrentMonth(transactions){
+  // If no saldo set, return null
+  if(state.saldo===null) return null;
+  const sd=state.saldoData;
+  if(!sd) return state.saldo;
+  // enteredAt: timestamp when user set the saldo
+  const enteredMs=sd.enteredAt?.toDate?.()?.getTime()||0;
+  // Sum transactions created AFTER the saldo was entered
+  let adj=0;
+  transactions.filter(t=>t.account==='personal').forEach(t=>{
+    const createdMs=t.createdAt?.toDate?.()?.getTime()||0;
+    if(createdMs<=enteredMs) return; // already factored in when user set saldo
+    if(t.type==='ingreso') adj+=t.amount;
+    if(t.type==='gasto')   adj-=t.amount;
+  });
+  return state.saldo+adj;
+}
+
 async function calcSaldoForMonth(targetMonth){
   if(state.saldo===null) return null;
   const currentMonth=getMonthKey(new Date());
-  if(targetMonth>=currentMonth) return state.saldo;
-
-  // Collect months between targetMonth (exclusive) and currentMonth (inclusive)
+  if(targetMonth>=currentMonth){
+    // Current or future: use dynamic calculation
+    return calcSaldoCurrentMonth(state.transactions);
+  }
+  // Past month: work backwards from current saldo
   const months=[];
   let m=nextMonth(targetMonth);
   while(m<=currentMonth){ months.push(m); m=nextMonth(m); }
-
   let adjusted=state.saldo;
   await Promise.all(months.map(async mo=>{
     const snap=await getDocs(query(
@@ -140,8 +161,8 @@ async function calcSaldoForMonth(targetMonth){
     snap.docs.forEach(d=>{
       const t=d.data();
       if(t.account!=='personal') return;
-      if(t.type==='gasto')    adjusted+=t.amount;   // se había gastado → antes tenía más
-      if(t.type==='ingreso')  adjusted-=t.amount;   // había ingresado → antes tenía menos
+      if(t.type==='gasto')   adjusted+=t.amount;
+      if(t.type==='ingreso') adjusted-=t.amount;
     });
   }));
   return adjusted;
